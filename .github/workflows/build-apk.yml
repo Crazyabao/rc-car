@@ -30,6 +30,13 @@ jobs:
     - name: Set ANDROID_HOME
       run: echo "ANDROID_HOME=/usr/lib/android-sdk" >> $GITHUB_ENV
 
+    - name: Accept Android SDK licenses
+      run: |
+        mkdir -p /usr/lib/android-sdk/licenses
+        echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > /usr/lib/android-sdk/licenses/android-sdk-license
+        echo -e "\nd56f5187479451eabf01fb78af6dfcb131a6481e" >> /usr/lib/android-sdk/licenses/android-sdk-license
+        echo -e "\n24333f8a63b6825ea9c5514f83c2829b004d1fee" >> /usr/lib/android-sdk/licenses/android-sdk-license
+
     - name: Grant execute permission for gradlew
       run: chmod +x android/gradlew
 
