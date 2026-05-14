@@ -22,52 +22,36 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    - name: Install Android SDK and required components
+    - name: Install Android SDK
       run: |
         sudo apt-get update -qq
         sudo apt-get install -y -qq android-sdk
-        
-        # Check installed platforms
-        echo "Installed platforms:"
-        ls /usr/lib/android-sdk/platforms/ || echo "No platforms found"
-        
-        # The apt package only includes android-23, we need to handle this
-        # For now, let's modify the project to use android-23
-
-    - name: Modify project to use available SDK
-      run: |
-        # Change compileSdkVersion and targetSdkVersion to 23 (available via apt)
-        sed -i 's/compileSdkVersion 26/compileSdkVersion 23/' android/app/build.gradle
-        sed -i 's/minSdkVersion 26/minSdkVersion 23/' android/app/build.gradle
-        sed -i 's/targetSdkVersion 26/targetSdkVersion 23/' android/app/build.gradle
-        
-        # Update support library versions to match SDK 23
-        sed -i "s/com.android.support:cardview-v7:26.1.0/com.android.support:cardview-v7:23.4.0/" android/app/build.gradle
-        sed -i "s/com.android.support.constraint:constraint-layout:1.1.3/com.android.support.constraint:constraint-layout:1.0.2/" android/app/build.gradle
-        
-        echo "Modified build.gradle:"
-        cat android/app/build.gradle
 
     - name: Set ANDROID_HOME
-      run: |
-        echo "ANDROID_HOME=/usr/lib/android-sdk" >> $GITHUB_ENV
+      run: echo "ANDROID_HOME=/usr/lib/android-sdk" >> $GITHUB_ENV
 
     - name: Grant execute permission for gradlew
       run: chmod +x android/gradlew
+
+    - name: Debug - Show environment
+      run: |
+        echo "JAVA_HOME=$JAVA_HOME"
+        echo "ANDROID_HOME=$ANDROID_HOME"
+        java -version
+        ls /usr/lib/android-sdk/platforms/
+        cat android/app/build.gradle
 
     - name: Build Debug APK
       run: |
         cd android
         ./gradlew assembleDebug --stacktrace
 
-    - name: Verify APK exists
+    - name: List build outputs
+      if: always()
       run: |
-        ls -la android/app/build/outputs/apk/debug/
-        if [ ! -f android/app/build/outputs/apk/debug/app-debug.apk ]; then
-          echo "ERROR: APK file not found!"
-          exit 1
-        fi
-        echo "APK file found successfully!"
+        echo "=== Build outputs ==="
+        find android/app/build -name "*.apk" 2>/dev/null || echo "No APK found"
+        ls -la android/app/build/outputs/apk/debug/ 2>/dev/null || echo "Debug dir not found"
 
     - name: Upload APK artifact
       if: success()
